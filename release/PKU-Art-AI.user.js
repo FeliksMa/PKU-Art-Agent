@@ -1231,7 +1231,7 @@ ${args.ids.map((id) => catalog.get(id, ["attachment"]).name).join("\n")}
     const log = element("div");
     log.setAttribute("role", "log");
     log.setAttribute("aria-live", "polite");
-    const status = element("p", "助手默认关闭，请先配置本机服务。", "meta");
+    const status = element("p", callbacks.settings.enabled ? `已启用 · ${callbacks.settings.providerId} · 每次任务需授权共享内容` : "助手默认关闭，请先在设置中连接模型。", "meta");
     status.setAttribute("role", "status");
     const jobs = element("div");
     const cancelDownloads = element("button", "停止全部附件下载");
