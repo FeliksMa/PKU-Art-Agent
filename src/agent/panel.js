@@ -61,10 +61,28 @@ export function mountAgentPanel(callbacks) {
     const addProvider = (id, label) => { const option = element('option', label); option.value = id; providers.append(option); };
     addProvider(callbacks.settings.providerId, callbacks.settings.providerId || '请先连接服务');
     const settingsNote = element('p', 'API Key 在本机模型设置页保存一次即可，重启后自动读取。此处只保存配对码与模型选择。', 'note');
-    const manage = element('a', '管理模型与 API Key（本机设置页）'); manage.target = '_blank'; manage.rel = 'noopener noreferrer';
+    const manage = element('button', '配置 API', 'primary'); manage.type = 'button';
+    const configDialog = element('dialog', undefined, 'config-dialog'); configDialog.setAttribute('aria-labelledby', 'agent-config-title');
+    const configTitle = element('h2', '配置模型与 API'); configTitle.id = 'agent-config-title';
+    const configAddress = element('code');
+    const configLink = element('a', '打开本机配置页', 'modal-open'); configLink.target = '_blank'; configLink.rel = 'noopener noreferrer';
+    const dialogClose = element('button', '返回助手'); dialogClose.type = 'button';
+    const dialogActions = element('div', undefined, 'row'); dialogActions.append(configLink, dialogClose);
+    configDialog.append(configTitle,
+        element('p', '在本机配置页添加模型、填写 API Key 并保存一次，以后自动读取。', 'note'),
+        configAddress, dialogActions,
+        element('p', '若配置页打不开，请先双击电脑里的“启动课程助手.cmd”。保存后回到这里，点击“连接并刷新模型”。', 'note'),
+        element('p', '密钥保存在当前电脑的本机文件中，目前为明文存储，不会写入教学网页面。换电脑时需在那台电脑启动服务并单独配置、配对。', 'note'));
+    manage.onclick = () => { updateManageLink(); configDialog.showModal(); };
+    dialogClose.onclick = () => configDialog.close();
+    configDialog.addEventListener('close', () => manage.focus());
     const updateManageLink = () => {
-        try { const url = new URL(address.value.trim()); if (url.protocol !== 'http:' || url.hostname !== '127.0.0.1' || !url.port) throw new Error(); manage.href = `${url.origin}/settings#${encodeURIComponent(token.value.trim())}`; }
-        catch { manage.removeAttribute('href'); }
+        try {
+            const url = new URL(address.value.trim());
+            if (url.protocol !== 'http:' || url.hostname !== '127.0.0.1' || !url.port || url.username || url.password || url.pathname !== '/' || url.search || url.hash) throw new Error();
+            configAddress.textContent = `${url.origin}/settings`;
+            configLink.href = `${url.origin}/settings#${encodeURIComponent(token.value.trim())}`; configLink.hidden = false;
+        } catch { configLink.removeAttribute('href'); configLink.hidden = true; configAddress.textContent = '请先填写有效的本机服务地址。'; }
     };
     address.addEventListener('input', updateManageLink); token.addEventListener('input', updateManageLink); updateManageLink();
     const connect = element('button', '连接并刷新模型'); connect.type = 'button';
@@ -84,7 +102,7 @@ export function mountAgentPanel(callbacks) {
     const send = element('button', '发送', 'primary'); send.type = 'submit';
     const stop = element('button', '停止'); stop.type = 'button'; stop.disabled = true;
     controls.append(preview, element('span', '', 'grow'), stop, send);
-    compose.append(quickModel, prompt, consentLabel, controls); panel.append(bar, body, compose); root.append(launch, panel); document.body.append(host);
+    compose.append(quickModel, prompt, consentLabel, controls); panel.append(bar, body, compose); root.append(launch, panel, configDialog); document.body.append(host);
     for (const [label, text] of [
         ['整理作业要求', '请阅读本页，整理作业要求、截止时间和提交方式，附上来源；没有明确写出的内容请标为待确认。'],
         ['查看课程附件', '列出本页的课程附件，按用途分类；先不要下载。'],

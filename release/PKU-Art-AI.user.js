@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         PKU-Art AI (Community)
 // @namespace    pku-art-ai/community
-// @version      2.6.27-ai.2
+// @version      2.6.27-ai.3
 // @author       Arthals and community contributors
 // @description  给你一个足够好看的北大网站。
 // @license      GPL-3.0 license
@@ -1178,6 +1178,7 @@ ${args.ids.map((id) => catalog.get(id, ["attachment"]).name).join("\n")}
 .body{overflow:auto;flex:1;min-height:0;padding:16px;scrollbar-width:thin;scrollbar-color:var(--c-scrollbar,#c1c1c1) transparent}.welcome{padding:18px 0 10px}.welcome h2{font-size:21px;letter-spacing:-.5px;margin:10px 0 6px;font-weight:600}.welcome p{font-size:13px;margin:0;color:var(--a-text)}.eyebrow{font-size:10px;letter-spacing:2px;color:var(--a-primary);font-weight:600}.suggestions{display:grid;gap:8px;margin:18px 0}.suggestions button{text-align:left;font-size:13px;padding:10px 12px;background:var(--a-bg);border-color:transparent}.suggestions button:hover{border-color:var(--a-border)}.suggestions span{float:right;color:var(--a-text)}
 .note{font-size:12px;color:var(--a-text);margin:6px 0 12px}.message{white-space:pre-wrap;overflow-wrap:anywhere;padding:12px;background:var(--a-bg);border:1px solid var(--a-border);border-radius:6px;margin:0 0 12px;max-height:360px;overflow:auto;line-height:1.75}.message.user{background:var(--a-tint);border-color:transparent}.meta{font-size:11px;color:var(--a-text);margin:10px 0}.meta:empty{display:none}.compose{border-top:1px solid var(--a-border);padding:14px 16px;background:var(--a-card)}.compose textarea{width:100%;height:82px;resize:vertical;border:1px solid var(--a-border);background:var(--c-input-bg,var(--a-bg));color:var(--a-title);border-radius:6px;padding:10px;line-height:1.6}.compose textarea::placeholder{color:var(--a-text);opacity:.7}.compose>label{display:block;margin:8px 0 0;font-size:11px;line-height:1.55}.primary{background:var(--a-primary);color:var(--a-card);border-color:transparent;font-weight:500}.primary:hover{background:var(--a-primary);filter:brightness(.94)}
 .row{display:flex;gap:8px;align-items:center;margin-top:10px}.grow{flex:1}.settings h2{font-size:17px;margin:3px 0 4px}.settings{padding:3px 0 12px}label.field{display:block;margin:18px 0;font-size:12px;color:var(--a-text)}label.field input:not([type=checkbox]),select{display:block;width:100%;margin-top:6px;border:1px solid var(--a-border);background:var(--a-bg);color:var(--a-title);border-radius:6px;padding:9px}input[type=checkbox]{vertical-align:middle;accent-color:var(--a-primary)}.confirm{background:var(--a-tint);border:1px solid var(--a-primary);padding:12px;border-radius:6px;margin-bottom:12px;white-space:pre-wrap;overflow-wrap:anywhere}.confirm pre{font:inherit;white-space:pre-wrap;max-height:200px;overflow:auto}a{color:var(--a-primary);overflow-wrap:anywhere}.job{font-size:12px;padding:7px 0;border-bottom:1px solid var(--a-border)}.preview{white-space:pre-wrap;overflow-wrap:anywhere;max-height:270px;overflow:auto;font-size:12px}.compose>select{margin:0 0 10px;padding:6px 8px;font-size:12px}.bar button[aria-pressed="true"]{color:var(--a-primary)}.compose .row button{font-size:12px}#agent-preview{border:0;padding-left:0;background:transparent;color:var(--a-text)}[hidden]{display:none!important}
+.config-dialog{max-width:min(420px,calc(100vw - 32px));padding:24px;border:1px solid var(--a-border);border-radius:8px;background:var(--a-card);color:var(--a-title);box-shadow:var(--c-box-shadow,0 10px 50px #0003);font:inherit}.config-dialog::backdrop{background:#0007}.config-dialog h2{font-size:18px;margin:0 0 10px}.config-dialog code{display:block;padding:10px;background:var(--a-bg);border-radius:6px;overflow-wrap:anywhere;font-size:12px}.config-dialog .row{margin:18px 0}.modal-open{display:inline-block;padding:8px 12px;background:var(--a-primary);color:var(--a-card);border-radius:6px;text-decoration:none;font-size:13px}
 @keyframes appear{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}@media(max-width:600px){:host{right:12px;bottom:12px}.panel{height:calc(100dvh - 48px)}}
 `;
   function element(tag, text, className) {
@@ -1274,16 +1275,45 @@ ${args.ids.map((id) => catalog.get(id, ["attachment"]).name).join("\n")}
     };
     addProvider(callbacks.settings.providerId, callbacks.settings.providerId || "请先连接服务");
     const settingsNote = element("p", "API Key 在本机模型设置页保存一次即可，重启后自动读取。此处只保存配对码与模型选择。", "note");
-    const manage = element("a", "管理模型与 API Key（本机设置页）");
-    manage.target = "_blank";
-    manage.rel = "noopener noreferrer";
+    const manage = element("button", "配置 API", "primary");
+    manage.type = "button";
+    const configDialog = element("dialog", void 0, "config-dialog");
+    configDialog.setAttribute("aria-labelledby", "agent-config-title");
+    const configTitle = element("h2", "配置模型与 API");
+    configTitle.id = "agent-config-title";
+    const configAddress = element("code");
+    const configLink = element("a", "打开本机配置页", "modal-open");
+    configLink.target = "_blank";
+    configLink.rel = "noopener noreferrer";
+    const dialogClose = element("button", "返回助手");
+    dialogClose.type = "button";
+    const dialogActions = element("div", void 0, "row");
+    dialogActions.append(configLink, dialogClose);
+    configDialog.append(
+      configTitle,
+      element("p", "在本机配置页添加模型、填写 API Key 并保存一次，以后自动读取。", "note"),
+      configAddress,
+      dialogActions,
+      element("p", "若配置页打不开，请先双击电脑里的“启动课程助手.cmd”。保存后回到这里，点击“连接并刷新模型”。", "note"),
+      element("p", "密钥保存在当前电脑的本机文件中，目前为明文存储，不会写入教学网页面。换电脑时需在那台电脑启动服务并单独配置、配对。", "note")
+    );
+    manage.onclick = () => {
+      updateManageLink();
+      configDialog.showModal();
+    };
+    dialogClose.onclick = () => configDialog.close();
+    configDialog.addEventListener("close", () => manage.focus());
     const updateManageLink = () => {
       try {
         const url = new URL(address.value.trim());
-        if (url.protocol !== "http:" || url.hostname !== "127.0.0.1" || !url.port) throw new Error();
-        manage.href = `${url.origin}/settings#${encodeURIComponent(token.value.trim())}`;
+        if (url.protocol !== "http:" || url.hostname !== "127.0.0.1" || !url.port || url.username || url.password || url.pathname !== "/" || url.search || url.hash) throw new Error();
+        configAddress.textContent = `${url.origin}/settings`;
+        configLink.href = `${url.origin}/settings#${encodeURIComponent(token.value.trim())}`;
+        configLink.hidden = false;
       } catch {
-        manage.removeAttribute("href");
+        configLink.removeAttribute("href");
+        configLink.hidden = true;
+        configAddress.textContent = "请先填写有效的本机服务地址。";
       }
     };
     address.addEventListener("input", updateManageLink);
@@ -1326,7 +1356,7 @@ ${args.ids.map((id) => catalog.get(id, ["attachment"]).name).join("\n")}
     controls.append(preview, element("span", "", "grow"), stop, send);
     compose.append(quickModel, prompt2, consentLabel, controls);
     panel.append(bar, body, compose);
-    root.append(launch, panel);
+    root.append(launch, panel, configDialog);
     document.body.append(host);
     for (const [label, text] of [
       ["整理作业要求", "请阅读本页，整理作业要求、截止时间和提交方式，附上来源；没有明确写出的内容请标为待确认。"],
