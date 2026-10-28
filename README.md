@@ -2,7 +2,27 @@
 
 ![cover](https://cdn.arthals.ink/bed/2025/11/cover-1b32229620764c46a2717d2b6291d93b.jpg)
 
-# 🎨 PKU Art
+# 🎨 PKU Art AI · Community
+
+基于 [Arthals 的 PKU-Art](https://github.com/zhuozhiyongde/PKU-Art) 的社区扩展：在原有界面美化与录播下载上，增加可配置的大模型助手。保留 GPL-3.0 许可证及原作者署名。
+
+**AI 功能：** DeepSeek / Chat Completions 兼容接口、页面阅读、作业要求整理、带确认的课程附件批量下载、录播入口整理。默认关闭，API Key 保留在本机服务中。
+
+**尚未实现：** 跨页面批量录播下载、附件正文解析、内置语音转写和 Codex 连接器。原有单节录播下载继续保留。
+
+- [AI 安装与通用模型配置](docs/AGENT.md)
+- [架构、工具扩展与后续计划](docs/ARCHITECTURE.md)
+- [来源与修改说明](NOTICE.md)
+
+![AI 侧栏日间模式（示例数据）](docs/assets/agent-light.png)
+
+![AI 侧栏暗色模式（示例数据）](docs/assets/agent-dark.png)
+
+本版本请使用 `npm run build:local` 构建，或安装 `release/PKU-Art-AI.user.js`，不要使用下文原项目的 CDN 安装渠道。下面保留原项目说明与作者介绍，涉及官方 CDN 的内容仅适用于原项目。
+
+---
+
+# 🎨 PKU Art（原项目说明）
 
 </div>
 

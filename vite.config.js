@@ -12,7 +12,11 @@ const date = new Date().toLocaleDateString('zh-CN', {
 });
 
 // 读取并解析 version.env 文件
-const envConfig = dotenv.parse(fs.readFileSync('.env'));
+const envConfig = fs.existsSync('.env') ? dotenv.parse(fs.readFileSync('.env')) : {};
+// Forks must not auto-update from the upstream CDN and overwrite local features.
+const releaseURLs = envConfig.UPDATE_URL && envConfig.DOWNLOAD_URL
+    ? { updateURL: envConfig.UPDATE_URL, downloadURL: envConfig.DOWNLOAD_URL }
+    : { updateURL: 'none', downloadURL: 'none' };
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -25,21 +29,20 @@ export default defineConfig({
             entry: 'src/main.js',
             userscript: {
                 icon: 'http://cdn.arthals.ink/Arthals-mcskin.png',
-                namespace: 'arthals/pku-art',
-                name: 'PKU-Art',
+                namespace: envConfig.USERSCRIPT_NAMESPACE || 'pku-art-ai/community',
+                name: envConfig.USERSCRIPT_NAME || 'PKU-Art AI (Community)',
                 description: '给你一个足够好看的北大网站。',
                 match: ['*://*.pku.edu.cn/*'],
                 // local development
                 // match: ['*://*.pku.edu.cn/*', 'http://localhost:8000/*'],
                 'run-at': 'document-start',
                 'inject-into': 'page',
-                version: envConfig.VERSION,
-                updateURL: 'https://cdn.arthals.ink/release/PKU-Art.user.js',
-                downloadURL: 'https://cdn.arthals.ink/release/PKU-Art.user.js',
-                supportURL: 'https://github.com/zhuozhiyongde/PKU-Art/issues',
-                connect: ['pku.edu.cn'],
+                version: envConfig.VERSION || '2.6.27-ai.1',
+                ...releaseURLs,
+                ...(envConfig.SUPPORT_URL ? { supportURL: envConfig.SUPPORT_URL } : {}),
+                connect: ['pku.edu.cn', '127.0.0.1'],
                 license: 'GPL-3.0 license',
-                author: 'Arthals',
+                author: envConfig.AUTHOR || 'Arthals and community contributors',
                 $extra: {
                     'author-blog': 'https://arthals.ink',
                     date,

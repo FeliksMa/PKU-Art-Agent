@@ -1,0 +1,27 @@
+{
+    "port": 17321,
+    "allowedOrigins": ["https://course.pku.edu.cn", "https://onlineroomse.pku.edu.cn"],
+    "providers": [
+        {
+            "id": "deepseek",
+            "label": "DeepSeek",
+            "protocol": "openai-chat-completions",
+            "baseURL": "https://api.deepseek.com",
+            "model": "deepseek-flash",
+            "apiKeyEnv": "DEEPSEEK_API_KEY",
+            "maxTokens": 4096,
+            "extraBody": {"thinking": {"type": "disabled"}}
+        },
+        {
+            "id": "custom",
+            "label": "自定义 OpenAI 兼容服务（请先配置）",
+            "enabled": false,
+            "protocol": "openai-chat-completions",
+            "baseURL": "https://your-provider.example/v1",
+            "model": "your-model",
+            "apiKeyEnv": "CUSTOM_LLM_API_KEY",
+            "maxTokens": 4096,
+            "extraBody": {}
+        }
+    ]
+}

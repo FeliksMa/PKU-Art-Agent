@@ -31,3 +31,8 @@ test
 
 .env
 README copy.md
+
+# Local agent credentials and generated packages
+agent.config.local.json
+.agent-token.local
+coverage/

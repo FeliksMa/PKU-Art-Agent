@@ -1,5 +1,6 @@
 import applyStylesForCurrentPage from './style.js';
 import { initializeThemeManager, initializeThemeToggleButton } from './theme.js';
+import { initializeAgent } from './agent/index.js';
 import {
     initializeLogoNavigation,
     ensureSidebarVisible,
@@ -31,6 +32,7 @@ redirectGlobalMoreLink();
 enableDirectOpenLinks();
 manageElectiveCourseQueryForm();
 initializeBatchDownload();
+initializeAgent();
 refactorIaaaPage();
 refactorElectiveFaqPage();
 refactorElectivePlanPage();

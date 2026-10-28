@@ -7,10 +7,15 @@
         "dev": "vite",
         "build": "uv run update-cdn.py build",
         "preview": "vite preview",
+        "build:local": "vite build",
+        "agent": "node bridge/server.js",
+        "agent:init": "node bridge/server.js --init",
+        "test:agent": "node --test tests/*.test.js",
         "release": "uv run update-cdn.py update"
     },
     "devDependencies": {
         "dotenv": "^16.4.5",
+        "linkedom": "^0.18.14",
         "unplugin-auto-import": "^0.17.5",
         "vite": "^6.2.1",
         "vite-plugin-mkcert": "^1.17.6",
