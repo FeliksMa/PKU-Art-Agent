@@ -10,6 +10,8 @@
 
 **尚未实现：** 跨页面批量录播下载、附件正文解析、内置语音转写和 Codex 连接器。原有单节录播下载继续保留。
 
+**安装助手版：** [PKU-Art-AI.user.js](https://raw.githubusercontent.com/FeliksMa/PKU-Art-Agent/main/release/PKU-Art-AI.user.js)。安装后还需要按下面的说明启动本机模型服务并配置自己的 API Key。
+
 - [AI 安装与通用模型配置](docs/AGENT.md)
 - [架构、工具扩展与后续计划](docs/ARCHITECTURE.md)
 - [来源与修改说明](NOTICE.md)
