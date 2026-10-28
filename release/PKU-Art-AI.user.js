@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         PKU-Art AI (Community)
 // @namespace    pku-art-ai/community
-// @version      2.6.27-ai.1
+// @version      2.6.27-ai.2
 // @author       Arthals and community contributors
 // @description  给你一个足够好看的北大网站。
 // @license      GPL-3.0 license
@@ -1177,7 +1177,7 @@ ${args.ids.map((id) => catalog.get(id, ["attachment"]).name).join("\n")}
 .panel{width:min(412px,calc(100vw - 32px));height:min(724px,calc(100dvh - 108px));background:var(--a-card);border:1px solid var(--a-border);box-shadow:var(--c-box-shadow,0 10px 50px #0000001a);border-radius:8px;display:flex;flex-direction:column;overflow:hidden;animation:appear .18s ease-out}.bar{display:flex;align-items:center;gap:9px;padding:16px;border-bottom:1px solid var(--a-border)}.brand{flex:1}.brand strong{display:block;font-size:15px;font-weight:600}.brand small{display:block;font-size:10px;letter-spacing:1.5px;color:var(--a-text)}.bar button{border:0;background:transparent;padding:5px 7px;font-size:12px;color:var(--a-text)}.bar button:hover{background:var(--a-hover)}
 .body{overflow:auto;flex:1;min-height:0;padding:16px;scrollbar-width:thin;scrollbar-color:var(--c-scrollbar,#c1c1c1) transparent}.welcome{padding:18px 0 10px}.welcome h2{font-size:21px;letter-spacing:-.5px;margin:10px 0 6px;font-weight:600}.welcome p{font-size:13px;margin:0;color:var(--a-text)}.eyebrow{font-size:10px;letter-spacing:2px;color:var(--a-primary);font-weight:600}.suggestions{display:grid;gap:8px;margin:18px 0}.suggestions button{text-align:left;font-size:13px;padding:10px 12px;background:var(--a-bg);border-color:transparent}.suggestions button:hover{border-color:var(--a-border)}.suggestions span{float:right;color:var(--a-text)}
 .note{font-size:12px;color:var(--a-text);margin:6px 0 12px}.message{white-space:pre-wrap;overflow-wrap:anywhere;padding:12px;background:var(--a-bg);border:1px solid var(--a-border);border-radius:6px;margin:0 0 12px;max-height:360px;overflow:auto;line-height:1.75}.message.user{background:var(--a-tint);border-color:transparent}.meta{font-size:11px;color:var(--a-text);margin:10px 0}.meta:empty{display:none}.compose{border-top:1px solid var(--a-border);padding:14px 16px;background:var(--a-card)}.compose textarea{width:100%;height:82px;resize:vertical;border:1px solid var(--a-border);background:var(--c-input-bg,var(--a-bg));color:var(--a-title);border-radius:6px;padding:10px;line-height:1.6}.compose textarea::placeholder{color:var(--a-text);opacity:.7}.compose>label{display:block;margin:8px 0 0;font-size:11px;line-height:1.55}.primary{background:var(--a-primary);color:var(--a-card);border-color:transparent;font-weight:500}.primary:hover{background:var(--a-primary);filter:brightness(.94)}
-.row{display:flex;gap:8px;align-items:center;margin-top:10px}.grow{flex:1}.settings h2{font-size:17px;margin:3px 0 4px}.settings{padding:3px 0 12px}label.field{display:block;margin:18px 0;font-size:12px;color:var(--a-text)}label.field input:not([type=checkbox]),select{display:block;width:100%;margin-top:6px;border:1px solid var(--a-border);background:var(--a-bg);color:var(--a-title);border-radius:6px;padding:9px}input[type=checkbox]{vertical-align:middle;accent-color:var(--a-primary)}.confirm{background:var(--a-tint);border:1px solid var(--a-primary);padding:12px;border-radius:6px;margin-bottom:12px;white-space:pre-wrap;overflow-wrap:anywhere}.confirm pre{font:inherit;white-space:pre-wrap;max-height:200px;overflow:auto}a{color:var(--a-primary);overflow-wrap:anywhere}.job{font-size:12px;padding:7px 0;border-bottom:1px solid var(--a-border)}.preview{white-space:pre-wrap;overflow-wrap:anywhere;max-height:270px;overflow:auto;font-size:12px}.compose .row button{font-size:12px}#agent-preview{border:0;padding-left:0;background:transparent;color:var(--a-text)}[hidden]{display:none!important}
+.row{display:flex;gap:8px;align-items:center;margin-top:10px}.grow{flex:1}.settings h2{font-size:17px;margin:3px 0 4px}.settings{padding:3px 0 12px}label.field{display:block;margin:18px 0;font-size:12px;color:var(--a-text)}label.field input:not([type=checkbox]),select{display:block;width:100%;margin-top:6px;border:1px solid var(--a-border);background:var(--a-bg);color:var(--a-title);border-radius:6px;padding:9px}input[type=checkbox]{vertical-align:middle;accent-color:var(--a-primary)}.confirm{background:var(--a-tint);border:1px solid var(--a-primary);padding:12px;border-radius:6px;margin-bottom:12px;white-space:pre-wrap;overflow-wrap:anywhere}.confirm pre{font:inherit;white-space:pre-wrap;max-height:200px;overflow:auto}a{color:var(--a-primary);overflow-wrap:anywhere}.job{font-size:12px;padding:7px 0;border-bottom:1px solid var(--a-border)}.preview{white-space:pre-wrap;overflow-wrap:anywhere;max-height:270px;overflow:auto;font-size:12px}.compose>select{margin:0 0 10px;padding:6px 8px;font-size:12px}.bar button[aria-pressed="true"]{color:var(--a-primary)}.compose .row button{font-size:12px}#agent-preview{border:0;padding-left:0;background:transparent;color:var(--a-text)}[hidden]{display:none!important}
 @keyframes appear{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}@media(max-width:600px){:host{right:12px;bottom:12px}.panel{height:calc(100dvh - 48px)}}
 `;
   function element(tag, text, className) {
@@ -1221,8 +1221,11 @@ ${args.ids.map((id) => catalog.get(id, ["attachment"]).name).join("\n")}
     const heading = element("div", void 0, "brand");
     heading.append(element("strong", "课程助手"), element("small", "PKU ART / ASSISTANT"));
     const settingsButton = element("button", "设置");
+    const toggle = element("button", callbacks.settings.enabled ? "已开启" : "已关闭");
+    toggle.setAttribute("aria-label", "开关课程助手");
+    toggle.setAttribute("aria-pressed", String(callbacks.settings.enabled));
     const close = element("button", "收起");
-    bar.append(spark(), heading, settingsButton, close);
+    bar.append(spark(), heading, toggle, settingsButton, close);
     const body = element("div", void 0, "body");
     const intro = element("div", void 0, "welcome");
     intro.append(element("span", "LESS BUSYWORK, MORE LEARNING", "eyebrow"), element("h2", "把琐事交给助手。"), element("p", "梳理作业要求、查找课程资料，\n也可以帮你安排附件下载。"));
@@ -1270,7 +1273,22 @@ ${args.ids.map((id) => catalog.get(id, ["attachment"]).name).join("\n")}
       providers.append(option);
     };
     addProvider(callbacks.settings.providerId, callbacks.settings.providerId || "请先连接服务");
-    const settingsNote = element("p", "API Key 只在本机服务的环境变量中配置。此处只保存配对码；请仅安装可信脚本。新增模型请编辑本机 JSON 配置并重启服务。", "note");
+    const settingsNote = element("p", "API Key 在本机模型设置页保存一次即可，重启后自动读取。此处只保存配对码与模型选择。", "note");
+    const manage = element("a", "管理模型与 API Key（本机设置页）");
+    manage.target = "_blank";
+    manage.rel = "noopener noreferrer";
+    const updateManageLink = () => {
+      try {
+        const url = new URL(address.value.trim());
+        if (url.protocol !== "http:" || url.hostname !== "127.0.0.1" || !url.port) throw new Error();
+        manage.href = `${url.origin}/settings#${encodeURIComponent(token.value.trim())}`;
+      } catch {
+        manage.removeAttribute("href");
+      }
+    };
+    address.addEventListener("input", updateManageLink);
+    token.addEventListener("input", updateManageLink);
+    updateManageLink();
     const connect = element("button", "连接并刷新模型");
     connect.type = "button";
     const save = element("button", "保存设置", "primary");
@@ -1279,7 +1297,7 @@ ${args.ids.map((id) => catalog.get(id, ["attachment"]).name).join("\n")}
     settingsStatus.setAttribute("role", "status");
     const actions = element("div", void 0, "row");
     actions.append(connect, save);
-    form.append(settingsNote, actions, settingsStatus);
+    form.append(settingsNote, manage, actions, settingsStatus);
     settings.append(form);
     body.append(settings);
     const compose = element("form", void 0, "compose");
@@ -1287,6 +1305,11 @@ ${args.ids.map((id) => catalog.get(id, ["attachment"]).name).join("\n")}
     prompt2.placeholder = "例如：整理本页的作业要求，列出可下载附件";
     prompt2.maxLength = 4e3;
     prompt2.setAttribute("aria-label", "向课程助手发送任务");
+    const quickModel = element("select");
+    quickModel.setAttribute("aria-label", "切换助手模型");
+    const modelOption = element("option", callbacks.settings.providerId || "请先配置模型");
+    modelOption.value = callbacks.settings.providerId || "";
+    quickModel.append(modelOption);
     const consentLabel = element("label", void 0, "note");
     const consent = element("input");
     consent.type = "checkbox";
@@ -1301,7 +1324,7 @@ ${args.ids.map((id) => catalog.get(id, ["attachment"]).name).join("\n")}
     stop.type = "button";
     stop.disabled = true;
     controls.append(preview, element("span", "", "grow"), stop, send);
-    compose.append(prompt2, consentLabel, controls);
+    compose.append(quickModel, prompt2, consentLabel, controls);
     panel.append(bar, body, compose);
     root.append(launch, panel);
     document.body.append(host);
@@ -1329,6 +1352,33 @@ ${args.ids.map((id) => catalog.get(id, ["attachment"]).name).join("\n")}
     function currentSettings() {
       return { enabled: enabled.checked, bridgeURL: address.value.trim(), token: token.value.trim(), providerId: providers.value };
     }
+    function updateToggle() {
+      toggle.textContent = enabled.checked ? "已开启" : "已关闭";
+      toggle.setAttribute("aria-pressed", String(enabled.checked));
+    }
+    toggle.onclick = () => {
+      try {
+        const next = { ...currentSettings(), enabled: !enabled.checked };
+        callbacks.save(next);
+        enabled.checked = next.enabled;
+        callbacks.settings = next;
+        updateToggle();
+        status.textContent = next.enabled ? "助手已开启，使用已保存的模型配置。" : "助手已关闭，当前任务与附件队列已停止。";
+      } catch (error) {
+        status.textContent = error.message;
+      }
+    };
+    quickModel.onchange = () => {
+      try {
+        providers.value = quickModel.value;
+        const next = currentSettings();
+        callbacks.save(next);
+        callbacks.settings = next;
+        status.textContent = `已切换模型：${quickModel.selectedOptions[0].textContent}`;
+      } catch (error) {
+        status.textContent = error.message;
+      }
+    };
     function showSettings(show) {
       settings.hidden = !show;
       log.hidden = show;
@@ -1341,6 +1391,7 @@ ${args.ids.map((id) => catalog.get(id, ["attachment"]).name).join("\n")}
       panel.hidden = false;
       launch.hidden = true;
       prompt2.focus();
+      if (token.value.trim()) void refreshModels(false);
     };
     close.onclick = () => {
       panel.hidden = true;
@@ -1348,27 +1399,44 @@ ${args.ids.map((id) => catalog.get(id, ["attachment"]).name).join("\n")}
       launch.focus();
     };
     settingsButton.onclick = () => showSettings(settings.hidden);
-    connect.onclick = async () => {
+    async function refreshModels(showStatus = true) {
       connect.disabled = true;
-      settingsStatus.textContent = "正在连接…";
+      if (showStatus) settingsStatus.textContent = "正在连接…";
       try {
         const list = await callbacks.connect(currentSettings());
         const previous = providers.value;
         providers.replaceChildren();
         for (const p of list) addProvider(p.id, `${p.label} · ${p.model}`);
         if (list.some((p) => p.id === previous)) providers.value = previous;
-        settingsStatus.textContent = list.length ? "已连接。选择模型后保存。" : "没有已启用的模型配置。";
+        quickModel.replaceChildren();
+        for (const p of list) {
+          const option = element("option", `${p.label} · ${p.model}`);
+          option.value = p.id;
+          quickModel.append(option);
+        }
+        if (list.some((p) => p.id === previous)) quickModel.value = previous;
+        else {
+          const placeholder = element("option", "请选择模型");
+          placeholder.value = "";
+          quickModel.prepend(placeholder);
+          quickModel.value = "";
+        }
+        if (showStatus) settingsStatus.textContent = list.length ? "已连接。选择模型后保存。" : "没有已启用的模型配置，请在本机设置页启用模型。";
       } catch (error) {
-        settingsStatus.textContent = error.message;
+        if (showStatus) settingsStatus.textContent = error.message;
+        else status.textContent = "本机服务未连接。电脑重启后请双击“启动课程助手”。已保存的密钥无需重新填写。";
       } finally {
         connect.disabled = false;
       }
-    };
+    }
+    connect.onclick = () => refreshModels();
     form.onsubmit = (event) => {
       event.preventDefault();
       try {
         callbacks.save(currentSettings());
         callbacks.settings = currentSettings();
+        quickModel.value = providers.value;
+        updateToggle();
         settingsStatus.textContent = "已保存";
         showSettings(false);
         status.textContent = enabled.checked ? `已启用 · ${providers.value} · 每次任务需授权共享内容` : "助手已关闭";
@@ -1395,6 +1463,7 @@ ${args.ids.map((id) => catalog.get(id, ["attachment"]).name).join("\n")}
       send.disabled = true;
       stop.disabled = false;
       settingsButton.disabled = true;
+      quickModel.disabled = true;
       try {
         await callbacks.run(text);
         status.textContent = "本次任务结束。附件下载状态请查看队列。";
@@ -1405,6 +1474,7 @@ ${args.ids.map((id) => catalog.get(id, ["attachment"]).name).join("\n")}
         send.disabled = false;
         stop.disabled = true;
         settingsButton.disabled = false;
+        quickModel.disabled = false;
       }
     };
     return {

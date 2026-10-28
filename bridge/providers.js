@@ -6,6 +6,7 @@ export function validateProviders(providers) {
     for (const p of providers) {
         if (!/^[a-z0-9_-]{1,40}$/i.test(p.id) || ids.has(p.id)) throw new Error('provider id 无效或重复');
         ids.add(p.id);
+        if (p.apiKey !== undefined && (typeof p.apiKey !== 'string' || p.apiKey.length > 4096)) throw new Error('保存的密钥格式无效');
         if (p.protocol !== 'openai-chat-completions') throw new Error(`不支持的协议：${p.protocol}`);
         const url = new URL(p.baseURL);
         const local = ['127.0.0.1', 'localhost', '[::1]'].includes(url.hostname);
@@ -21,8 +22,8 @@ export function validateProviders(providers) {
 
 // New protocols implement this same one-turn contract. Provider configuration never contains executable code.
 export async function completeChat(provider, { messages, tools, signal }, { fetchImpl = fetch, env = process.env } = {}) {
-    const key = env[provider.apiKeyEnv];
-    if (!key) throw new Error(`未设置环境变量 ${provider.apiKeyEnv}`);
+    const key = provider.apiKey || env[provider.apiKeyEnv];
+    if (!key) throw new Error('请先在本机模型设置页保存 API Key');
     const response = await fetchImpl(`${provider.baseURL.replace(/\/$/, '')}/chat/completions`, {
         method: 'POST',
         redirect: 'error',

@@ -12,6 +12,8 @@
 
 **安装助手版：** [PKU-Art-AI.user.js](https://raw.githubusercontent.com/FeliksMa/PKU-Art-Agent/main/release/PKU-Art-AI.user.js)。安装后还需要按下面的说明启动本机模型服务并配置自己的 API Key。
 
+**配置一次，以后直接用：** Windows 双击 `启动课程助手.cmd`，在自动打开的本机设置页填写并保存 API Key，再与教学网助手配对一次。以后可在侧栏开关助手、切换模型；重登教学网无需重新配置，电脑重启后双击启动器即可读取原配置。
+
 - [AI 安装与通用模型配置](docs/AGENT.md)
 - [架构、工具扩展与后续计划](docs/ARCHITECTURE.md)
 - [来源与修改说明](NOTICE.md)

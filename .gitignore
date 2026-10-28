@@ -34,5 +34,6 @@ README copy.md
 
 # Local agent credentials and generated packages
 agent.config.local.json
+agent.config.local.json.tmp
 .agent-token.local
 coverage/
