@@ -20,6 +20,12 @@ export function saveProvider(config, input, configPath) {
     if (old && old.baseURL !== input.baseURL.trim() && !key && !input.clearKey) throw new Error('修改接口地址时，请重新填写密钥，避免将原密钥发送到新服务');
     const provider = { ...(old || { protocol: 'openai-chat-completions', apiKeyEnv: `PKU_AGENT_${input.id.toUpperCase().replace(/-/g, '_')}_KEY`, maxTokens: 4096, extraBody: {} }),
         id: input.id, label: input.label.trim(), baseURL: input.baseURL.trim(), model: input.model.trim(), enabled: input.enabled };
+    if (old && old.baseURL !== provider.baseURL) {
+        const destination = new URL(provider.baseURL).host.toUpperCase().replace(/[^A-Z0-9]/g, '_');
+        provider.apiKeyEnv = `PKU_AGENT_${input.id.toUpperCase().replace(/-/g, '_')}_${destination}_KEY`;
+        provider.extraBody = {};
+    }
+    if (new URL(provider.baseURL).hostname === 'api.deepseek.com') provider.extraBody = { ...provider.extraBody, thinking: { type: 'disabled' } };
     if (input.clearKey) delete provider.apiKey;
     else if (key) provider.apiKey = key;
     const next = { ...config, providers: old ? config.providers.map(p => p.id === provider.id ? provider : p) : [...config.providers, provider] };

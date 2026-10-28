@@ -32,6 +32,15 @@ test('saved key works without environment variables and can be replaced explicit
     } });
 });
 
+test('changing vendors does not retain vendor-specific parameters or the previous environment key', t => {
+    const dir = mkdtempSync(join(tmpdir(), 'pku-settings-')); t.after(() => rmSync(dir, { recursive: true, force: true }));
+    const config = initial(); config.providers[0].extraBody = { thinking: { type: 'disabled' } };
+    saveProvider(config, input({ baseURL: 'https://another.example/v1', apiKey: 'fake-new-vendor-key' }), join(dir, 'config.json'));
+    assert.deepEqual(config.providers[0].extraBody, {});
+    assert.notEqual(config.providers[0].apiKeyEnv, 'TEST_KEY');
+    assert.equal(config.providers[0].apiKey, 'fake-new-vendor-key');
+});
+
 test('settings endpoints reject teaching-site and missing origins, require pairing, and persist hot updates', async t => {
     const dir = mkdtempSync(join(tmpdir(), 'pku-settings-')); t.after(() => rmSync(dir, { recursive: true, force: true }));
     const config = initial(); const server = createBridge({ config, token: 'paired', configPath: join(dir, 'config.json') });
