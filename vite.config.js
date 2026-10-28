@@ -37,7 +37,7 @@ export default defineConfig({
                 // match: ['*://*.pku.edu.cn/*', 'http://localhost:8000/*'],
                 'run-at': 'document-start',
                 'inject-into': 'page',
-                version: envConfig.VERSION || '2.6.27-ai.3',
+                version: envConfig.VERSION || '2.6.27-ai.4',
                 ...releaseURLs,
                 ...(envConfig.SUPPORT_URL ? { supportURL: envConfig.SUPPORT_URL } : {}),
                 connect: ['pku.edu.cn', '127.0.0.1'],

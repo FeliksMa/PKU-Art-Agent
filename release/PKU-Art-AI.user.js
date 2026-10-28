@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         PKU-Art AI (Community)
 // @namespace    pku-art-ai/community
-// @version      2.6.27-ai.3
+// @version      2.6.27-ai.4
 // @author       Arthals and community contributors
 // @description  给你一个足够好看的北大网站。
 // @license      GPL-3.0 license
@@ -14,6 +14,7 @@
 // @grant        GM_addValueChangeListener
 // @grant        GM_download
 // @grant        GM_getValue
+// @grant        GM_openInTab
 // @grant        GM_setClipboard
 // @grant        GM_setValue
 // @grant        GM_xmlhttpRequest
@@ -399,6 +400,7 @@ patterns: [
   var _GM_addValueChangeListener = (() => typeof GM_addValueChangeListener != "undefined" ? GM_addValueChangeListener : void 0)();
   var _GM_download = (() => typeof GM_download != "undefined" ? GM_download : void 0)();
   var _GM_getValue = (() => typeof GM_getValue != "undefined" ? GM_getValue : void 0)();
+  var _GM_openInTab = (() => typeof GM_openInTab != "undefined" ? GM_openInTab : void 0)();
   var _GM_setClipboard = (() => typeof GM_setClipboard != "undefined" ? GM_setClipboard : void 0)();
   var _GM_setValue = (() => typeof GM_setValue != "undefined" ? GM_setValue : void 0)();
   var _GM_xmlhttpRequest = (() => typeof GM_xmlhttpRequest != "undefined" ? GM_xmlhttpRequest : void 0)();
@@ -777,6 +779,52 @@ patterns: [
       throw new Error("本机服务地址应为 http://127.0.0.1:端口");
     }
     return url.origin;
+  }
+  async function pairWithBridge(settings, { signal, onStatus = () => {
+  }, onApprovalURL = () => {
+  } } = {}) {
+    const base = validateBridgeURL(settings.bridgeURL);
+    const bytes = crypto.getRandomValues(new Uint8Array(32));
+    const verifier = [...bytes].map((b) => b.toString(16).padStart(2, "0")).join("");
+    const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(verifier));
+    const challenge = [...new Uint8Array(digest)].map((b) => b.toString(16).padStart(2, "0")).join("");
+    const controller = new AbortController();
+    const abort = () => controller.abort();
+    signal == null ? void 0 : signal.throwIfAborted();
+    signal == null ? void 0 : signal.addEventListener("abort", abort, { once: true });
+    const timeout = setTimeout(abort, 18e4);
+    try {
+      onStatus("正在连接本机服务…");
+      const { id } = await bridgeRequest(settings, "/v1/pair/start", { origin: location.origin, challenge }, controller.signal);
+      if (!/^[a-f0-9]{64}$/.test(id)) throw new Error("连接响应格式无效");
+      const url = `${base}/connect#${id}`;
+      onApprovalURL(url);
+      onStatus("请在打开的本机页面点击“允许连接”。");
+      if (typeof _GM_openInTab === "function") _GM_openInTab(url, { active: true, insert: true });
+      while (true) {
+        const result = await bridgeRequest(settings, "/v1/pair/status", { id, verifier }, controller.signal);
+        if (result.status === "denied") throw new Error("已取消连接");
+        if (result.status === "approved") {
+          if (!/^[a-f0-9]{64}$/.test(result.token)) throw new Error("连接响应格式无效");
+          return result.token;
+        }
+        await new Promise((resolve, reject) => {
+          const onAbort = () => {
+            clearTimeout(timer);
+            reject(new DOMException("连接已取消或超时", "AbortError"));
+          };
+          const timer = setTimeout(() => {
+            controller.signal.removeEventListener("abort", onAbort);
+            resolve();
+          }, 1500);
+          controller.signal.addEventListener("abort", onAbort, { once: true });
+          if (controller.signal.aborted) onAbort();
+        });
+      }
+    } finally {
+      clearTimeout(timeout);
+      signal == null ? void 0 : signal.removeEventListener("abort", abort);
+    }
   }
   function bridgeRequest(settings, path, body, signal) {
     const base = validateBridgeURL(settings.bridgeURL);
@@ -1262,8 +1310,13 @@ ${args.ids.map((id) => catalog.get(id, ["attachment"]).name).join("\n")}
     }
     form.append(enabledLabel);
     const address = field("本机服务地址", "url", callbacks.settings.bridgeURL);
-    const token = field("配对码（不是模型 API Key）", "password", callbacks.settings.token);
-    token.autocomplete = "off";
+    const token = element("input");
+    token.type = "hidden";
+    token.value = callbacks.settings.token;
+    form.append(token);
+    const connectionOptions = element("details");
+    connectionOptions.append(element("summary", "连接选项"), address.parentElement);
+    form.append(connectionOptions);
     const providerLabel = element("label", "模型配置", "field");
     const providers = element("select");
     providerLabel.append(providers);
@@ -1274,7 +1327,7 @@ ${args.ids.map((id) => catalog.get(id, ["attachment"]).name).join("\n")}
       providers.append(option);
     };
     addProvider(callbacks.settings.providerId, callbacks.settings.providerId || "请先连接服务");
-    const settingsNote = element("p", "API Key 在本机模型设置页保存一次即可，重启后自动读取。此处只保存配对码与模型选择。", "note");
+    const settingsNote = element("p", "连接后，在本机设置页选择服务商、模型并填写 API Key。", "note");
     const manage = element("button", "配置 API", "primary");
     manage.type = "button";
     const configDialog = element("dialog", void 0, "config-dialog");
@@ -1287,28 +1340,36 @@ ${args.ids.map((id) => catalog.get(id, ["attachment"]).name).join("\n")}
     configLink.rel = "noopener noreferrer";
     const dialogClose = element("button", "返回助手");
     dialogClose.type = "button";
+    const dialogStatus = element("p", "", "note");
+    dialogStatus.setAttribute("role", "status");
     const dialogActions = element("div", void 0, "row");
     dialogActions.append(configLink, dialogClose);
     configDialog.append(
       configTitle,
-      element("p", "在本机配置页添加模型、填写 API Key 并保存一次，以后自动读取。", "note"),
+      element("p", "在本机设置页选择模型并管理 API Key。首次连接需要在该页面确认授权。", "note"),
       configAddress,
       dialogActions,
-      element("p", "若配置页打不开，请先双击电脑里的“启动课程助手.cmd”。保存后回到这里，点击“连接并刷新模型”。", "note"),
-      element("p", "密钥保存在当前电脑的本机文件中，目前为明文存储，不会写入教学网页面。换电脑时需在那台电脑启动服务并单独配置、配对。", "note")
+      dialogStatus,
+      element("p", "若页面打不开，请先双击电脑里的“启动课程助手.cmd”。", "note"),
+      element("p", "API Key 保留在当前电脑。教学网助手只获得调用模型的权限。", "note")
     );
     manage.onclick = () => {
       updateManageLink();
       configDialog.showModal();
     };
+    let pairingController;
     dialogClose.onclick = () => configDialog.close();
-    configDialog.addEventListener("close", () => manage.focus());
+    configDialog.addEventListener("close", () => {
+      pairingController == null ? void 0 : pairingController.abort();
+      manage.focus();
+    });
     const updateManageLink = () => {
       try {
         const url = new URL(address.value.trim());
         if (url.protocol !== "http:" || url.hostname !== "127.0.0.1" || !url.port || url.username || url.password || url.pathname !== "/" || url.search || url.hash) throw new Error();
         configAddress.textContent = `${url.origin}/settings`;
-        configLink.href = `${url.origin}/settings#${encodeURIComponent(token.value.trim())}`;
+        configLink.href = `${url.origin}/settings`;
+        configLink.textContent = "打开本机配置页";
         configLink.hidden = false;
       } catch {
         configLink.removeAttribute("href");
@@ -1319,15 +1380,17 @@ ${args.ids.map((id) => catalog.get(id, ["attachment"]).name).join("\n")}
     address.addEventListener("input", updateManageLink);
     token.addEventListener("input", updateManageLink);
     updateManageLink();
-    const connect = element("button", "连接并刷新模型");
+    const connect = element("button", "连接并配置模型", "primary");
     connect.type = "button";
+    const refresh = element("button", "刷新模型列表");
+    refresh.type = "button";
     const save = element("button", "保存设置", "primary");
     save.type = "submit";
     const settingsStatus = element("p", "", "meta");
     settingsStatus.setAttribute("role", "status");
     const actions = element("div", void 0, "row");
-    actions.append(connect, save);
-    form.append(settingsNote, manage, actions, settingsStatus);
+    actions.append(refresh, save);
+    form.append(settingsNote, connect, manage, actions, settingsStatus);
     settings.append(form);
     body.append(settings);
     const compose = element("form", void 0, "compose");
@@ -1459,7 +1522,49 @@ ${args.ids.map((id) => catalog.get(id, ["attachment"]).name).join("\n")}
         connect.disabled = false;
       }
     }
-    connect.onclick = () => refreshModels();
+    refresh.onclick = () => refreshModels();
+    document.addEventListener("visibilitychange", () => {
+      if (document.visibilityState === "visible" && token.value.trim() && !panel.hidden && !send.disabled) void refreshModels(false);
+    });
+    connect.onclick = async () => {
+      pairingController == null ? void 0 : pairingController.abort();
+      pairingController = new AbortController();
+      connect.disabled = true;
+      configDialog.showModal();
+      try {
+        const next = await callbacks.pair(currentSettings(), {
+          signal: pairingController.signal,
+          onStatus: (text) => {
+            settingsStatus.textContent = text;
+            status.textContent = text;
+            dialogStatus.textContent = text;
+          },
+          onApprovalURL: (url) => {
+            configLink.href = url;
+            configLink.textContent = "打开连接确认页";
+            configLink.hidden = false;
+          }
+        });
+        pairingController = void 0;
+        token.value = next.token;
+        enabled.checked = next.enabled;
+        callbacks.settings = next;
+        providers.replaceChildren();
+        addProvider(next.providerId, next.providerId || "请选择模型");
+        updateToggle();
+        updateManageLink();
+        configDialog.close();
+        await refreshModels(false);
+        settingsStatus.textContent = "已连接。请在打开的本机页面配置模型。";
+        status.textContent = "已连接课程助手。";
+      } catch (error) {
+        settingsStatus.textContent = error.name === "AbortError" ? "连接已取消或超时，请重试。" : error.message;
+        dialogStatus.textContent = settingsStatus.textContent;
+      } finally {
+        pairingController = void 0;
+        connect.disabled = false;
+      }
+    };
     form.onsubmit = (event) => {
       event.preventDefault();
       try {
@@ -1574,7 +1679,7 @@ ${args.ids.map((id) => catalog.get(id, ["attachment"]).name).join("\n")}
         settings,
         save(next) {
           validateBridgeURL(next.bridgeURL);
-          if (next.enabled && next.token.trim().length < 32) throw new Error("请输入本机服务生成的配对码");
+          if (next.enabled && next.token.trim().length < 32) throw new Error("请先点击“连接并配置模型”");
           settings = { ...next, token: next.token.trim() };
           _GM_setValue(SETTINGS_KEY, settings);
           if (!settings.enabled) {
@@ -1585,6 +1690,14 @@ ${args.ids.map((id) => catalog.get(id, ["attachment"]).name).join("\n")}
         async connect(next) {
           validateBridgeURL(next.bridgeURL);
           return (await bridgeRequest(next, "/v1/providers")).providers;
+        },
+        async pair(next, options) {
+          var _a;
+          const credential = await pairWithBridge(next, options);
+          const list = (await bridgeRequest({ ...next, token: credential }, "/v1/providers")).providers;
+          settings = { ...next, token: credential, enabled: true, providerId: list.some((p) => p.id === next.providerId) ? next.providerId : ((_a = list[0]) == null ? void 0 : _a.id) || "" };
+          _GM_setValue(SETTINGS_KEY, settings);
+          return settings;
         },
         preview() {
           return new PageCatalog().snapshot();

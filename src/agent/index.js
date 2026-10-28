@@ -1,5 +1,5 @@
 import { GM_getValue, GM_setValue } from '$';
-import { bridgeRequest, validateBridgeURL } from './transport.js';
+import { bridgeRequest, validateBridgeURL, pairWithBridge } from './transport.js';
 import { PageCatalog } from './page.js';
 import { downloadAttachment, DownloadQueue } from './downloads.js';
 import { createPageTools } from './tools.js';
@@ -23,7 +23,7 @@ export function initializeAgent() {
             settings,
             save(next) {
                 validateBridgeURL(next.bridgeURL);
-                if (next.enabled && next.token.trim().length < 32) throw new Error('请输入本机服务生成的配对码');
+                if (next.enabled && next.token.trim().length < 32) throw new Error('请先点击“连接并配置模型”');
                 settings = { ...next, token: next.token.trim() };
                 GM_setValue(SETTINGS_KEY, settings);
                 if (!settings.enabled) { running?.abort(); queue.cancelAll(); }
@@ -31,6 +31,13 @@ export function initializeAgent() {
             async connect(next) {
                 validateBridgeURL(next.bridgeURL);
                 return (await bridgeRequest(next, '/v1/providers')).providers;
+            },
+            async pair(next, options) {
+                const credential = await pairWithBridge(next, options);
+                const list = (await bridgeRequest({ ...next, token: credential }, '/v1/providers')).providers;
+                settings = { ...next, token: credential, enabled: true, providerId: list.some(p => p.id === next.providerId) ? next.providerId : list[0]?.id || '' };
+                GM_setValue(SETTINGS_KEY, settings);
+                return settings;
             },
             preview() { return new PageCatalog().snapshot(); },
             async run(prompt) {

@@ -55,41 +55,45 @@ export function mountAgentPanel(callbacks) {
     }
     form.append(enabledLabel);
     const address = field('本机服务地址', 'url', callbacks.settings.bridgeURL);
-    const token = field('配对码（不是模型 API Key）', 'password', callbacks.settings.token); token.autocomplete = 'off';
+    const token = element('input'); token.type = 'hidden'; token.value = callbacks.settings.token; form.append(token);
+    const connectionOptions = element('details'); connectionOptions.append(element('summary', '连接选项'), address.parentElement); form.append(connectionOptions);
     const providerLabel = element('label', '模型配置', 'field');
     const providers = element('select'); providerLabel.append(providers); form.append(providerLabel);
     const addProvider = (id, label) => { const option = element('option', label); option.value = id; providers.append(option); };
     addProvider(callbacks.settings.providerId, callbacks.settings.providerId || '请先连接服务');
-    const settingsNote = element('p', 'API Key 在本机模型设置页保存一次即可，重启后自动读取。此处只保存配对码与模型选择。', 'note');
+    const settingsNote = element('p', '连接后，在本机设置页选择服务商、模型并填写 API Key。', 'note');
     const manage = element('button', '配置 API', 'primary'); manage.type = 'button';
     const configDialog = element('dialog', undefined, 'config-dialog'); configDialog.setAttribute('aria-labelledby', 'agent-config-title');
     const configTitle = element('h2', '配置模型与 API'); configTitle.id = 'agent-config-title';
     const configAddress = element('code');
     const configLink = element('a', '打开本机配置页', 'modal-open'); configLink.target = '_blank'; configLink.rel = 'noopener noreferrer';
     const dialogClose = element('button', '返回助手'); dialogClose.type = 'button';
+    const dialogStatus = element('p', '', 'note'); dialogStatus.setAttribute('role', 'status');
     const dialogActions = element('div', undefined, 'row'); dialogActions.append(configLink, dialogClose);
     configDialog.append(configTitle,
-        element('p', '在本机配置页添加模型、填写 API Key 并保存一次，以后自动读取。', 'note'),
-        configAddress, dialogActions,
-        element('p', '若配置页打不开，请先双击电脑里的“启动课程助手.cmd”。保存后回到这里，点击“连接并刷新模型”。', 'note'),
-        element('p', '密钥保存在当前电脑的本机文件中，目前为明文存储，不会写入教学网页面。换电脑时需在那台电脑启动服务并单独配置、配对。', 'note'));
+        element('p', '在本机设置页选择模型并管理 API Key。首次连接需要在该页面确认授权。', 'note'),
+        configAddress, dialogActions, dialogStatus,
+        element('p', '若页面打不开，请先双击电脑里的“启动课程助手.cmd”。', 'note'),
+        element('p', 'API Key 保留在当前电脑。教学网助手只获得调用模型的权限。', 'note'));
     manage.onclick = () => { updateManageLink(); configDialog.showModal(); };
+    let pairingController;
     dialogClose.onclick = () => configDialog.close();
-    configDialog.addEventListener('close', () => manage.focus());
+    configDialog.addEventListener('close', () => { pairingController?.abort(); manage.focus(); });
     const updateManageLink = () => {
         try {
             const url = new URL(address.value.trim());
             if (url.protocol !== 'http:' || url.hostname !== '127.0.0.1' || !url.port || url.username || url.password || url.pathname !== '/' || url.search || url.hash) throw new Error();
             configAddress.textContent = `${url.origin}/settings`;
-            configLink.href = `${url.origin}/settings#${encodeURIComponent(token.value.trim())}`; configLink.hidden = false;
+            configLink.href = `${url.origin}/settings`; configLink.textContent = '打开本机配置页'; configLink.hidden = false;
         } catch { configLink.removeAttribute('href'); configLink.hidden = true; configAddress.textContent = '请先填写有效的本机服务地址。'; }
     };
     address.addEventListener('input', updateManageLink); token.addEventListener('input', updateManageLink); updateManageLink();
-    const connect = element('button', '连接并刷新模型'); connect.type = 'button';
+    const connect = element('button', '连接并配置模型', 'primary'); connect.type = 'button';
+    const refresh = element('button', '刷新模型列表'); refresh.type = 'button';
     const save = element('button', '保存设置', 'primary'); save.type = 'submit';
     const settingsStatus = element('p', '', 'meta'); settingsStatus.setAttribute('role', 'status');
-    const actions = element('div', undefined, 'row'); actions.append(connect, save);
-    form.append(settingsNote, manage, actions, settingsStatus); settings.append(form); body.append(settings);
+    const actions = element('div', undefined, 'row'); actions.append(refresh, save);
+    form.append(settingsNote, connect, manage, actions, settingsStatus); settings.append(form); body.append(settings);
     const compose = element('form', undefined, 'compose');
     const prompt = element('textarea'); prompt.placeholder = '例如：整理本页的作业要求，列出可下载附件'; prompt.maxLength = 4000; prompt.setAttribute('aria-label', '向课程助手发送任务');
     const quickModel = element('select'); quickModel.setAttribute('aria-label', '切换助手模型');
@@ -147,7 +151,28 @@ export function mountAgentPanel(callbacks) {
         } catch (error) { if (showStatus) settingsStatus.textContent = error.message; else status.textContent = '本机服务未连接。电脑重启后请双击“启动课程助手”。已保存的密钥无需重新填写。'; }
         finally { connect.disabled = false; }
     }
-    connect.onclick = () => refreshModels();
+    refresh.onclick = () => refreshModels();
+    document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible' && token.value.trim() && !panel.hidden && !send.disabled) void refreshModels(false);
+    });
+    connect.onclick = async () => {
+        pairingController?.abort(); pairingController = new AbortController();
+        connect.disabled = true; configDialog.showModal();
+        try {
+            const next = await callbacks.pair(currentSettings(), {
+                signal: pairingController.signal,
+                onStatus: text => { settingsStatus.textContent = text; status.textContent = text; dialogStatus.textContent = text; },
+                onApprovalURL: url => { configLink.href = url; configLink.textContent = '打开连接确认页'; configLink.hidden = false; },
+            });
+            pairingController = undefined;
+            token.value = next.token; enabled.checked = next.enabled; callbacks.settings = next;
+            providers.replaceChildren(); addProvider(next.providerId, next.providerId || '请选择模型');
+            updateToggle(); updateManageLink(); configDialog.close();
+            await refreshModels(false);
+            settingsStatus.textContent = '已连接。请在打开的本机页面配置模型。'; status.textContent = '已连接课程助手。';
+        } catch (error) { settingsStatus.textContent = error.name === 'AbortError' ? '连接已取消或超时，请重试。' : error.message; dialogStatus.textContent = settingsStatus.textContent; }
+        finally { pairingController = undefined; connect.disabled = false; }
+    };
     form.onsubmit = event => {
         event.preventDefault();
         try { callbacks.save(currentSettings()); callbacks.settings = currentSettings(); quickModel.value = providers.value; updateToggle(); settingsStatus.textContent = '已保存'; showSettings(false); status.textContent = enabled.checked ? `已启用 · ${providers.value} · 每次任务需授权共享内容` : '助手已关闭'; }

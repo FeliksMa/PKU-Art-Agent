@@ -36,4 +36,6 @@ README copy.md
 agent.config.local.json
 agent.config.local.json.tmp
 .agent-token.local
+.agent-clients.local.json
+.agent-clients.local.json.tmp
 coverage/
